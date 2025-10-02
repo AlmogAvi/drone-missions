@@ -1,4 +1,6 @@
 # Drone Missions (PX4 SITL + MAVSDK + QGC)
+![CI](https://github.com/AlmogAvi/drone-missions/actions/workflows/python-ci.yml/badge.svg)
+
 
 Minimal Python missions for drones (PX4 SITL or real hardware) using **MAVSDK**.
 Includes: arm/takeoff/land, rectangular survey (“lawnmower”), square flights, and orbit patterns.
