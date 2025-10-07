@@ -1,24 +1,31 @@
 name: Python CI
-
 on: [push, pull_request]
 
 jobs:
-  build:
+  lint:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - run: python -m pip install --upgrade pip
+      - run: pip install -r requirements.txt
+      - run: python -m py_compile $(find . -name "*.py")
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+  dry-run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: |
+          python - <<'PY'
+          # דמה: ודא שקבצי swarm נטענים, בלי SITL אמיתי
+          import importlib
+          for m in ["src.swarm.formation_v","src.swarm.avoidance_orca"]:
+              importlib.import_module(m)
+          print("Dry-run import OK")
+          PY
 
-      - name: Run syntax check
-        run: |
-          python -m py_compile $(find . -name "*.py")

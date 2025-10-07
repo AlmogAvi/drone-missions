@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  px4-sitl:
+    build: .
+    container_name: px4-sitl
+    network_mode: host        # חשוב כדי ש-QGC במחשב יראה את ה-SITL
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+

@@ -1,0 +1,5 @@
+
+failed to solve: process "/bin/sh -c pip3 install --upgrade pip cython &&     pip3 install mavsdk pandas numpy matplotlib &&     pip3 install git+https://github.com/snape/RVO2" did not complete successfully: exit code: 1
+
+almog@almog-virtual-machine:~/drone-missions$ ^C
+
