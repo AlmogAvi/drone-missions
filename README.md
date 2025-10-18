@@ -1,150 +1,137 @@
-# 🛩️ Drone Missions – PX4 + MAVSDK Automation
+🛰️ Drone Missions – PX4 + MAVSDK
 
-This project provides ready-to-run mission scripts and utilities for autonomous drone control using **PX4 SITL** and **MAVSDK**.  
-It allows quick testing, simulation, and extension of flight behaviors such as takeoff, landing, survey patterns, orbits, and square missions – all directly from Python.
+A collection of autonomous flight missions for PX4, powered by Python + MAVSDK,
+with built-in telemetry logging and optional video-based target detection (OpenCV).
 
----
+This repository includes both classic and advanced missions such as
+Box Orbit, Lawnmower Search (SAR), Survey, Orbit Rectangle, and more.
 
-## 🚀 Quick Start
+⚙️ Requirements
+Software
 
-### 1. Clone the repository
-```bash
-git clone https://github.com/AlmogAvi/drone-missions.git
-cd drone-missions
+Python 3.10+
 
-2. Create and activate a virtual environment
-python3 -m venv .venv
-source .venv/bin/activate   # On Windows: .venv\Scripts\activate
+PX4 SITL or a real PX4-based drone
 
-3. Install dependencies
-pip install --upgrade pip
+QGroundControl (to visualize and monitor the mission)
+
+Gazebo / JMAVSim (for SITL simulation)
+
+Python Packages
+
+Install manually:
+
+pip install mavsdk opencv-python
+
+
+or via requirements.txt:
+
 pip install -r requirements.txt
-
-
-If requirements.txt doesn’t exist yet, create it manually with:
-
-mavsdk==2.9.0
-pandas>=2.2
-
-4. Launch PX4 SITL and QGroundControl
-
-Start PX4 SITL in a terminal (Gazebo or JMAVSim).
-
-Open QGroundControl and confirm connection on port 14540.
-
-🧭 Running Missions
-
-Each mission is defined as an async Python script under src/missions/
-You can execute any mission via the unified CLI:
-
-python main.py --mission takeoff_land --conn udp://:14540 --alt 20
-
-Supported missions:
-Mission	Description
-takeoff_land	Simple takeoff and landing sequence
-survey	Grid flight pattern for area scanning
-orbit_rect	Orbit path within rectangular area
-square	Square flight path demonstration
-
-Example:
-
-python main.py --mission survey --conn udp://:14540 --alt 25 --speed 6
-
-⚙️ Configuration
-
-You can optionally create a .env file (based on .env.example) to store connection defaults:
-
-MAVSDK_CONN=udp://:14540
-DEFAULT_ALT=20
-DEFAULT_SPEED=5
 
 📁 Project Structure
 drone-missions/
 │
-├── src/
-│   └── missions/
-│       ├── takeoff_land.py
-│       ├── survey.py
-│       ├── orbit_rect.py
-│       └── square.py
+├── main.py                     # Main CLI entry point for all missions
 │
-├── examples/           # Optional demo scripts
-├── scripts/            # Helper scripts (e.g. SITL setup)
-├── requirements.txt
-├── main.py
-├── .env.example
-└── README.md
+├── src/
+│   ├── missions/
+│   │   ├── takeoff_land.py     # Simple takeoff and land
+│   │   ├── survey.py           # Grid/survey flight
+│   │   ├── orbit_rect.py       # Rectangle-orbit pattern
+│   │   ├── square.py           # Simple square pattern
+│   │   ├── box_orbit.py        # Box + Loiter mission
+│   │   ├── sar_lawnmower.py    # Search-and-Rescue (lawnmower + vision)
+│   │   └── __init__.py
+│   │
+│   ├── utils/
+│   │   ├── logger.py           # Telemetry logger (CSV)
+│   │   └── __init__.py
+│
+└── logs/                       # Generated telemetry logs
 
-🧩 Example Code Snippet
-from mavsdk import System
-import asyncio
+🚀 How to Run
+1️⃣ Start PX4 SITL
+cd ~/PX4-Autopilot
+make px4_sitl gz_x500
 
-async def run_takeoff_land(conn_url="udp://:14540", alt=20.0):
-    drone = System()
-    await drone.connect(system_address=conn_url)
-    print(f"Connecting to {conn_url}...")
-    await drone.action.arm()
-    await drone.action.set_takeoff_altitude(alt)
-    await drone.action.takeoff()
-    await asyncio.sleep(5)
-    await drone.action.land()
-    print("Mission complete.")
+2️⃣ Launch QGroundControl
 
-🧪 Testing
-pytest -q
+It will automatically detect the PX4 SITL connection.
+
+3️⃣ Run missions from this repo
+Takeoff + Land
+python main.py --mission takeoff_land --conn udp://:14540
+
+Survey
+python main.py --mission survey --conn udp://:14540
+
+Orbit Rectangle
+python main.py --mission orbit_rect --conn udp://:14540
+
+Square
+python main.py --mission square --conn udp://:14540
+
+Box Orbit
+python main.py --mission box_orbit --conn udp://:14540 `
+  --alt 30 --len 80 --wid 50 --laps 2 --orbit_radius 20 --orbit_time 45 --speed 7 `
+  --log "logs/box_orbit.csv"
+
+SAR Lawnmower (Search & Rescue with camera)
+python main.py --mission sar_lawnmower --conn udp://:14540 `
+  --origin_lat 47.397742 --origin_lon 8.545594 --sar_alt 20 `
+  --box_w 80 --box_h 60 --lane 15 --video_src 0 --detect_n 5 --sar_speed 6 `
+  --log "logs/sar_lawnmower.csv"
+
+📊 Telemetry Logging
+
+You can record full flight telemetry by adding:
+
+--log logs/telemetry.csv
 
 
-Add your simulation logic tests under tests/.
+The generated CSV includes:
 
-📸 Optional: Demo in QGroundControl
+timestamp | flight_mode | lat | lon | abs_alt | rel_alt | vx | vy | vz | groundspeed | battery%
 
-Open QGroundControl
+🧠 Mission Overview
+Mission	Description
+takeoff_land	Simple autonomous takeoff and safe landing
+survey	Grid-style area scanning
+orbit_rect	Rectangular orbit around a central point
+square	Simple square pattern
+box_orbit	Rectangle flight pattern + Loiter (orbit) at center
+sar_lawnmower	Search-and-Rescue: lawnmower pattern with camera-based target detection
+📡 SAR Lawnmower Flow
 
-Run the mission script
+Workflow:
 
-Observe telemetry, waypoints, and flight path in real time.
+Connect to PX4
 
-🛠️ Development
-Linting & Formatting
-pip install ruff black
-ruff check .
-black src/
+Arm and take off to target altitude
 
-Run in Docker (optional)
-docker build -t drone-missions .
-docker run --rm -it drone-missions
+Fly a lawnmower search pattern (width × height × lane spacing)
 
-🧑‍💻 Contributing
+Use OpenCV to detect colored targets in the video feed
 
-Pull requests are welcome!
-For major changes, please open an issue first to discuss what you would like to change.
+Pause the mission and perform small offset maneuvers toward the target
 
-Fork the project
+Automatically execute Return-To-Launch (RTL)
 
-Create your feature branch (git checkout -b feature/awesome)
+Save the detected frame (target_*.jpg)
 
-Commit your changes (git commit -m 'Add awesome feature')
+🪪 License
 
-Push to the branch (git push origin feature/awesome)
+Open-source under the MIT License.
+Developed by AlmogAvi
+.
 
-Open a Pull Request
+💡 Tips (Windows)
 
-📄 License
+Activate your virtual environment before running:
 
-This project is licensed under the MIT License — see the LICENSE
- file for details.
+.\.venv\Scripts\Activate.ps1
 
-Author
 
-Almog Avi
-GitHub: @AlmogAvi
+Create a logs folder (if missing):
 
-✈️ Notes
-
-Works with PX4 SITL (udp://:14540)
-
-Requires Python ≥ 3.10
-
-Tested on Ubuntu 22.04
-
-Designed for learning, testing and mission automation research.
+New-Item -ItemType Directory -Force -Path .\logs | Out-Null
